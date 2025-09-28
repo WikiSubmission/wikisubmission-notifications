@@ -1,7 +1,7 @@
-import { NotificationReceiver } from "./get-receivers";
 import { WikiSubmission } from "wikisubmission-sdk";
 import { sendIOSNotification } from "./send-ios-notification";
 import { supabase } from "./supabase-client";
+import type { NotificationReceiver } from "../types/notification-receiver";
 
 export async function sendDailyVerseNotifications(receiver: NotificationReceiver) {
 

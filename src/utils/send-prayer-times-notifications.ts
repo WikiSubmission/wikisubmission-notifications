@@ -1,4 +1,4 @@
-import { NotificationReceiver } from "./get-receivers";
+import { NotificationReceiver } from "../types/notification-receiver";
 import { sendIOSNotification } from "./send-ios-notification";
 import { supabase } from "./supabase-client";
 

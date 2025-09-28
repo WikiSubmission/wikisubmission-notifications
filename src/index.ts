@@ -1,15 +1,20 @@
 import dotenv from 'dotenv';
-import { getReceivers } from "./utils/get-receivers";
+import { NotificationReceivers } from "./notification-receivers";
 import { sendPrayerTimesNotifications } from "./utils/send-prayer-times-notifications";
 import { sendDailyVerseNotifications } from './utils/send-daily-verse-notifications';
 import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifications';
+import { Server } from './api/server';
 
 (async () => {
     dotenv.config();
 
+    // Initialize the notification receivers singleton
+    const notificationReceivers = NotificationReceivers.instance;
+
     const handlePrayerNotifications = async () => {
         try {
-            const receivers = await getReceivers();
+            // Use the cached receivers from the singleton
+            const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.prayer_notifications && receiver.device_token) {
@@ -23,7 +28,8 @@ import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifi
 
     const handleDailyVerseNotifications = async () => {
         try {
-            const receivers = await getReceivers();
+            // Use the cached receivers from the singleton
+            const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.daily_verse_notifications && receiver.device_token) {
@@ -37,7 +43,8 @@ import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifi
 
     const handleDailyChapterNotifications = async () => {
         try {
-            const receivers = await getReceivers();
+            // Use the cached receivers from the singleton
+            const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.daily_chapter_notifications && receiver.device_token) {
@@ -50,12 +57,14 @@ import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifi
     };
 
     try {
-        console.log('Running initial notifications...');
+        console.log('Initializing notification receivers...');
+        await notificationReceivers.initialize();
+        await notificationReceivers.subscribeToChanges();
+
         await handlePrayerNotifications();
         await handleDailyVerseNotifications();
         await handleDailyChapterNotifications();
 
-        console.log('Setting up recurring intervals...');
         setInterval(() => {
             handlePrayerNotifications().catch(err => 
                 console.error('Unhandled error in prayer notifications interval:', err)
@@ -74,7 +83,24 @@ import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifi
             );
         }, 1000 * 60 * 60 * 3); // 3 hours
         
-        console.log('✅ WikiSubmission Notifications Service is running');
+        console.log('✅ Notifications Service is running');
+
+        const server = new Server();
+        await server.start();
+
+        console.log('✅ API server running');
+
+        // Graceful shutdown handling
+        const gracefulShutdown = async () => {
+            console.log('Shutting down gracefully...');
+            await notificationReceivers.shutdown();
+            await server.stop();
+            process.exit(0);
+        };
+
+        process.on('SIGINT', gracefulShutdown);
+        process.on('SIGTERM', gracefulShutdown);
+
     } catch (error) {
         console.error('Startup error:', error);
         process.exit(1);
