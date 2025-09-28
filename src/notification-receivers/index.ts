@@ -12,6 +12,7 @@ export class NotificationReceivers {
     private subscription: any = null;
     private reconnectInterval: NodeJS.Timeout | null = null;
     private isSubscribed = false;
+    private isReconnecting = false;
     
     async initialize() { 
         this.receivers = await this.getReceivers();
@@ -40,7 +41,15 @@ export class NotificationReceivers {
     }
 
     async subscribeToChanges() {
+        // Prevent multiple simultaneous reconnection attempts
+        if (this.isReconnecting) {
+            console.log('Reconnection already in progress, skipping...');
+            return;
+        }
+
         try {
+            this.isReconnecting = true;
+            
             // Clean up existing subscription if any
             if (this.subscription) {
                 await this.unsubscribe();
@@ -64,16 +73,19 @@ export class NotificationReceivers {
                 )
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
-                        console.log('Successfully subscribed to receivers changes');
+                        console.log('✅ Successfully subscribed to receivers changes');
                         this.isSubscribed = true;
+                        this.isReconnecting = false;
                         this.clearReconnectInterval();
                     } else if (status === 'CHANNEL_ERROR') {
-                        console.error('Subscription error, will retry...');
+                        console.error('❌ Subscription error, will retry in 30 seconds...');
                         this.isSubscribed = false;
+                        this.isReconnecting = false;
                         this.scheduleReconnect();
                     } else if (status === 'CLOSED') {
-                        console.warn('Subscription closed, will retry...');
+                        console.warn('⚠️ Subscription closed, will retry in 30 seconds...');
                         this.isSubscribed = false;
+                        this.isReconnecting = false;
                         this.scheduleReconnect();
                     }
                 });
@@ -83,6 +95,7 @@ export class NotificationReceivers {
 
         } catch (error) {
             console.error('Error setting up subscription:', error);
+            this.isReconnecting = false;
             this.scheduleReconnect();
         }
     }
@@ -130,14 +143,14 @@ export class NotificationReceivers {
     private scheduleReconnect() {
         if (this.reconnectInterval) return; // Already scheduled
 
-        console.log('Scheduling reconnection in 5 seconds...');
+        console.log('⏰ Scheduling reconnection in 30 seconds...');
         this.reconnectInterval = setTimeout(async () => {
             this.reconnectInterval = null;
-            if (!this.isSubscribed) {
-                console.log('🔄 Attempting to reconnect...');
+            if (!this.isSubscribed && !this.isReconnecting) {
+                console.log('🔄 Attempting scheduled reconnection...');
                 await this.subscribeToChanges();
             }
-        }, 5000);
+        }, 30000); // 30 seconds instead of 5
     }
 
     private clearReconnectInterval() {
@@ -148,24 +161,19 @@ export class NotificationReceivers {
     }
 
     private setupHeartbeat() {
+        // Much less frequent heartbeat to avoid log spam
         setInterval(async () => {
-            if (!this.isSubscribed || !this.subscription) {
+            if (!this.isSubscribed && !this.isReconnecting && !this.reconnectInterval) {
                 console.log('Heartbeat: Connection lost, attempting to reconnect...');
                 try {
                     await this.subscribeToChanges();
                 } catch (error) {
                     console.error('Heartbeat reconnection failed:', error);
                 }
-            } else {
-                // Ping the connection to ensure it's alive
-                try {
-                    await supabase().from('ws-notifications').select('count').limit(1).single();
-                } catch (error) {
-                    console.warn('Heartbeat: Connection test failed, will reconnect on next heartbeat');
-                    this.isSubscribed = false;
-                }
             }
-        }, 30000); // 30 seconds
+            // Skip connection testing - Supabase handles this internally
+            // Only reconnect when we know we're disconnected and no other reconnection is in progress
+        }, 300000); // 5 minutes
     }
 
     async unsubscribe() {

@@ -15,7 +15,7 @@ export async function sendDailyVerseNotifications(receiver: NotificationReceiver
     }
 
     if (!data || data.length === 0) {
-        console.log(`No daily verse notifications found for receiver ${receiver.device_token}`);
+        // Silently return - this is normal
         return;
     }
 

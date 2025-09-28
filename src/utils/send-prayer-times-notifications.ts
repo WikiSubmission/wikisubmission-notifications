@@ -14,7 +14,7 @@ export async function sendPrayerTimesNotifications(receiver: NotificationReceive
     }
 
     if (!data || data.length === 0) {
-        console.log(`No prayer times notifications found for receiver ${receiver.device_token}`);
+        // Silently return - this is normal
         return;
     }
 

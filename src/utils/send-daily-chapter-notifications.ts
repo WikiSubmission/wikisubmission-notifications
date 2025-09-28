@@ -15,7 +15,7 @@ export async function sendDailyChapterNotifications(receiver: NotificationReceiv
     }
 
     if (!data || data.length === 0) {
-        console.log(`No daily chapter notifications found for receiver ${receiver.device_token}`);
+        // Silently return - this is normal
         return;
     }
 
