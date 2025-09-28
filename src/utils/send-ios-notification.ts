@@ -81,9 +81,7 @@ export async function sendIOSNotification({
         
         // Log delivery status
         if (statusCode === 200) {
-          console.log(`✅ Notification delivered successfully to ${deviceToken}`);
-          console.log(`Title: ${title}`);
-          console.log(`Category: ${category || 'none'}`);
+          console.log(`✅ Notification delivered successfully to ${deviceToken} (${category})`);
         } else {
           console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
           console.error(`Response: ${data}`);
