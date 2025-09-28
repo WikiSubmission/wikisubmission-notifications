@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import { getReceivers } from "./utils/get-receivers";
 import { sendPrayerTimesNotifications } from "./utils/send-prayer-times-notifications";
-import { sendDailyVerseNotifications } from './utils/send-daily-verse-notifications copy';
+import { sendDailyVerseNotifications } from './utils/send-daily-verse-notifications';
 import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifications';
 
 (async () => {
