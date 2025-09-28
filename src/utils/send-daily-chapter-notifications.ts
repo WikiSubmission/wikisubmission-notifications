@@ -51,7 +51,7 @@ export async function sendDailyChapterNotifications(receiver: NotificationReceiv
         last_notification_sent_at: new Date().toISOString()
     }).eq('device_token', receiver.device_token);
 
-    await supabase().from('ws-notifications-random-chapter').update({
+    await supabase().from('ws-notifications-daily-chapter').update({
         last_notification_sent_at: new Date().toISOString()
     }).eq('device_token', receiver.device_token);
 }
