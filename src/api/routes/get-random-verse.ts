@@ -4,14 +4,18 @@ import { WRoute } from "../../types/w-route";
 
 export default function route(): WRoute { 
     return { 
-        url: "/random-verse/:device_token",
-        method: "GET",
+        url: "/random-verse",
+        method: "POST",
         cache: { 
             duration: 15,
             durationType: "seconds",
         },
         handler: async (request, reply) => {
-            const { device_token } = request.params as { device_token: string };
+            const { device_token } = request.body as { device_token: string };
+
+            if (!device_token) {
+                return reply.status(400).send({ error: "device_token is required in request body" });
+            }
 
             const ws = WikiSubmission.Quran.V1.createAPIClient();
             const verse = await ws.getRandomVerse();
