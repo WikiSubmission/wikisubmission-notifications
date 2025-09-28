@@ -37,7 +37,7 @@ export async function sendDailyVerseNotifications(receiver: NotificationReceiver
     }
 
     const verse = verseOfTheDay.response[0];
-    
+
     await sendIOSNotification({
         deviceToken: receiver.device_token,
         title: `Daily Verse`,
@@ -45,6 +45,11 @@ export async function sendDailyVerseNotifications(receiver: NotificationReceiver
         category: 'DAILY_VERSE_NOTIFICATION',
         threadId: 'daily-verse',
         deepLink: `wikisubmission://verse/${verse?.verse_id}`,
+        custom: {
+            verse_id: verse?.verse_id,
+            chapter_number: verse?.chapter_number,
+            verse_number: verse?.verse_number,
+        }
     });
 
     await supabase().from('ws-notifications').update({

@@ -41,10 +41,13 @@ export async function sendDailyChapterNotifications(receiver: NotificationReceiv
     await sendIOSNotification({
         deviceToken: receiver.device_token,
         title: `Daily Chapter`,
-        body: `[${chapter?.chapter_number}] ${chapter?.chapter_title_english} (${chapter?.chapter_title_transliterated}). Click to read now.`,
+        body: `Sura ${chapter?.chapter_number}, ${chapter?.chapter_title_english} (${chapter?.chapter_title_transliterated}). Click to read now.`,
         category: 'DAILY_CHAPTER_NOTIFICATION',
         threadId: 'daily-chapter',
         deepLink: `wikisubmission://chapter/${chapter?.chapter_number}`,
+        custom: {
+            chapter_number: chapter?.chapter_number
+        }
     });
 
     await supabase().from('ws-notifications').update({
