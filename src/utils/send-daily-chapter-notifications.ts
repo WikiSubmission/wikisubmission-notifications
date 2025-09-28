@@ -5,17 +5,17 @@ import { supabase } from "./supabase-client";
 
 export async function sendDailyChapterNotifications(receiver: NotificationReceiver) {
 
-    const { data, error } = await supabase().from('ws-notifications-random-chapter')
+    const { data, error } = await supabase().from('ws-notifications-daily-chapter')
         .select('*')
         .eq('device_token', receiver.device_token)
         .single();
 
     if (error) {
-        console.error(`Error getting random chapter notifications for receiver ${receiver.device_token}: ${error.message}`);
+        console.error(`Error getting daily chapter notifications for receiver ${receiver.device_token}: ${error.message}`);
     }
 
     if (!data || data.length === 0) {
-        console.log(`No random chapter notifications found for receiver ${receiver.device_token}`);
+        console.log(`No daily chapter notifications found for receiver ${receiver.device_token}`);
         return;
     }
 
@@ -27,12 +27,12 @@ export async function sendDailyChapterNotifications(receiver: NotificationReceiv
     const randomChapter = await ws.getRandomChapter();
 
     if (randomChapter instanceof Error) {
-        console.error(`Error getting random chapter for receiver ${receiver.device_token}: ${randomChapter.message}`);
+        console.error(`Error getting daily chapter for receiver ${receiver.device_token}: ${randomChapter.message}`);
         return;
     }
 
     if (randomChapter.response.length === 0) {
-        console.error(`No random verse found for receiver ${receiver.device_token}`);
+        console.error(`No daily chapter found for receiver ${receiver.device_token}`);
         return;
     }
 
@@ -40,10 +40,10 @@ export async function sendDailyChapterNotifications(receiver: NotificationReceiv
     
     await sendIOSNotification({
         deviceToken: receiver.device_token,
-        title: `Random Chapter`,
+        title: `Daily Chapter`,
         body: `[${chapter?.chapter_number}] ${chapter?.chapter_title_english} (${chapter?.chapter_title_transliterated}). Click to read now.`,
-        category: 'RANDOM_CHAPTER_NOTIFICATION',
-        threadId: 'random-chapter',
+        category: 'DAILY_CHAPTER_NOTIFICATION',
+        threadId: 'daily-chapter',
         deepLink: `wikisubmission://chapter/${chapter?.chapter_number}`,
     });
 
