@@ -8,46 +8,75 @@ import { sendDailyChapterNotifications } from './utils/send-daily-chapter-notifi
     dotenv.config();
 
     const handlePrayerNotifications = async () => {
-        const receivers = await getReceivers();
+        try {
+            const receivers = await getReceivers();
 
-        for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-            if (receiver.prayer_notifications && receiver.device_token) {
-                await sendPrayerTimesNotifications(receiver);
+            for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
+                if (receiver.prayer_notifications && receiver.device_token) {
+                    await sendPrayerTimesNotifications(receiver);
+                }
             }
+        } catch (error) {
+            console.error(error);
         }
     };
 
     const handleDailyVerseNotifications = async () => {
-        const receivers = await getReceivers();
+        try {
+            const receivers = await getReceivers();
 
-        for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-            if (receiver.daily_verse_notifications && receiver.device_token) {
-                await sendDailyVerseNotifications(receiver);
+            for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
+                if (receiver.daily_verse_notifications && receiver.device_token) {
+                    await sendDailyVerseNotifications(receiver);
+                }
             }
+        } catch (error) {
+            console.error(error);
         }
     };
 
     const handleDailyChapterNotifications = async () => {
-        const receivers = await getReceivers();
+        try {
+            const receivers = await getReceivers();
 
-        for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-            if (receiver.daily_verse_notifications && receiver.device_token) {
-                await sendDailyChapterNotifications(receiver);
+            for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
+                if (receiver.daily_chapter_notifications && receiver.device_token) {
+                    await sendDailyChapterNotifications(receiver);
+                }
             }
+        } catch (error) {
+            console.error(error);
         }
     };
 
     try {
-        // Run on start.
+        console.log('Running initial notifications...');
         await handlePrayerNotifications();
-        await handleDailyChapterNotifications();
         await handleDailyVerseNotifications();
+        await handleDailyChapterNotifications();
 
-        // Recurring intervals.
-        setInterval(handlePrayerNotifications, 60000); // 1 minute
-        setInterval(handleDailyVerseNotifications, 1000 * 60 * 60 * 3); // 3 hours
-        setInterval(handleDailyChapterNotifications, 1000 * 60 * 60 * 5); // 4 hours
+        console.log('Setting up recurring intervals...');
+        setInterval(() => {
+            handlePrayerNotifications().catch(err => 
+                console.error('Unhandled error in prayer notifications interval:', err)
+            );
+        }, 60000); // 1 minute
+        
+        setInterval(() => {
+            handleDailyVerseNotifications().catch(err => 
+                console.error('Unhandled error in daily verse notifications interval:', err)
+            );
+        }, 1000 * 60 * 60 * 1); // 1 hours
+        
+        setInterval(() => {
+            handleDailyChapterNotifications().catch(err => 
+                console.error('Unhandled error in daily chapter notifications interval:', err)
+            );
+        }, 1000 * 60 * 60 * 3); // 3 hours
+        
+        console.log('✅ WikiSubmission Notifications Service is running');
     } catch (error) {
-        console.error(`Unhandled error:`, error);
+        console.error('Startup error:', error);
+        process.exit(1);
     }
 })();

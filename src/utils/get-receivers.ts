@@ -10,17 +10,23 @@ export interface NotificationReceiver {
 }
 
 export async function getReceivers(): Promise<NotificationReceiver[]> {
-    const { data, error } = await supabase().from('ws-notifications').select('*');
+    try {
+        const { data, error } = await supabase().from('ws-notifications').select('*');
 
-    if (error) {
-        console.error(`Error getting receivers: ${error.message}`);
-        throw error;
-    }
+        if (error) {
+            console.error(`Error getting receivers: ${error.message}`);
+            return [];
+        }
 
-    if (!data || data.length === 0) {
-        console.log('No receivers found');
+        if (!data || data.length === 0) {
+            console.log('No receivers found');
+            return [];
+        }
+
+        console.log(`Found ${data.length} receivers`);
+        return data as NotificationReceiver[];
+    } catch (error) {
+        console.error('Exception in getReceivers:', error);
         return [];
     }
-
-    return data as NotificationReceiver[];
 }
