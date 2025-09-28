@@ -1,6 +1,6 @@
 # wikisubmission-notifications
 
-A simple push notification server, currently, only for [iOS app](https://apple.co/3uMVbz1) users.
+A simplified push notification server currently for [iOS](https://apple.co/3uMVbz1) app users.
 
 ## License
 
