@@ -1,25 +1,8 @@
 import http2 from 'http2';
 import jwt from 'jsonwebtoken';
+import { NotificationContent } from '../types/notification-content';
 
-export async function sendIOSNotification({
-  deviceToken,
-  title,
-  body,
-  category,
-  threadId,
-  expirationHours = 1,
-  deepLink,
-  custom,
-}: {
-  deviceToken: string;
-  title: string;
-  body: string;
-  category?: string;
-  threadId?: string;
-  expirationHours?: number;
-  deepLink?: string;
-  custom?: Record<string, any>;
-}) {
+export async function sendIOSNotification(deviceToken: string, notification: NotificationContent) {
   let client: http2.ClientHttp2Session | undefined;
 
   try {
@@ -38,32 +21,30 @@ export async function sendIOSNotification({
       'apns-push-type': 'alert',
       'apns-priority': '10',
       'authorization': `bearer ${token}`,
-      'apns-expiration': `${Math.floor(Date.now() / 1000) + expirationHours * 3600}`,
+      'apns-expiration': `${Math.floor(Date.now() / 1000) + notification.expirationHours * 3600}`,
     };
 
     const payload: Record<string, any> = {
       aps: {
-        alert: { title, body },
+        alert: { title: notification.title, body: notification.body },
         sound: 'default',
         badge: 1,
       },
-      ...custom,
+      ...notification.custom,
     };
 
-    if (category) payload['aps'].category = category;
-    if (threadId) payload['aps']['thread-id'] = threadId;
+    if (notification.category) payload['aps'].category = notification.category;
+    if (notification.threadId) payload['aps']['thread-id'] = notification.threadId;
     
-    if (deepLink) {
-      payload['deepLink'] = deepLink;
-      payload['url'] = deepLink;
+    if (notification.deepLink) {
+      payload['deepLink'] = notification.deepLink;
+      payload['url'] = notification.deepLink;
     }
 
     const bodyString = JSON.stringify(payload);
     
     // Log sending attempt
     console.log(`📤 Sending notification to ${deviceToken}...`);
-    console.log(`   Title: ${title}`);
-    if (deepLink) console.log(`   Deep Link: ${deepLink}`);
     
     const req = client.request(headers);
 
@@ -81,7 +62,7 @@ export async function sendIOSNotification({
         
         // Log delivery status
         if (statusCode === 200) {
-          console.log(`✅ Notification delivered successfully to ${deviceToken} (${category})`);
+          console.log(`✅ Notification delivered successfully to ${deviceToken} (${notification.category})`);
         } else {
           console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
           console.error(`Response: ${data}`);

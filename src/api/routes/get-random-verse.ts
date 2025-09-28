@@ -1,6 +1,6 @@
 import { sendIOSNotification } from "../../utils/send-ios-notification";
-import { WikiSubmission } from "wikisubmission-sdk";
 import { WRoute } from "../../types/w-route";
+import { generateRandomVerseNotification } from "../../notification-generators/random-verse";
 
 export default function route(): WRoute { 
     return { 
@@ -17,34 +17,18 @@ export default function route(): WRoute {
                 return reply.status(400).send({ error: "device_token is required in request body" });
             }
 
-            const ws = WikiSubmission.Quran.V1.createAPIClient();
-            const verse = await ws.getRandomVerse();
-
-            if (verse instanceof Error) {
-                return reply.status(500).send({ error: verse.message });
-            }
-
-            if (verse.response.length === 0) {
-                return reply.status(500).send({ error: "No verse found" });
-            }
-
             try {
-                const result = await sendIOSNotification({
-                    deviceToken: device_token,
-                    title: `Sura ${verse.response[0]?.chapter_number}, ${verse.response[0]?.chapter_title_english} (${verse.response[0]?.chapter_title_transliterated})`,
-                    body: `[${verse.response[0]?.verse_id}] ${verse.response[0]?.verse_text_english}`,
-                    category: "RANDOM_VERSE_NOTIFICATION",
-                    threadId: "random-verse",
-                    deepLink: `wikisubmission://verse/${verse.response[0]?.verse_id}`,
-                    custom: {
-                        verse_id: verse.response[0]?.verse_id,
-                    },
-                });
+                const result = await generateRandomVerseNotification();
 
-                return reply.send({
+                if (!result) {
+                    return reply.status(500).send({ error: "No verse found" });
+                }
+
+                await sendIOSNotification(device_token, result);
+
+                return reply.status(200).send({
                     success: true,
-                    verse: verse.response[0],
-                    notification_result: result
+                    content: result
                 });
             } catch (error) {
                 return reply.status(500).send({ error: error instanceof Error ? error.message : String(error) });
