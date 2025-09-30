@@ -48,7 +48,7 @@ export async function sendIOSNotification(deviceToken: string, notification: Not
     
     const req = client.request(headers);
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       let data = '';
       let statusCode: number | undefined;
 
@@ -60,20 +60,20 @@ export async function sendIOSNotification(deviceToken: string, notification: Not
       req.on('end', () => {
         client?.close();
         
-        // Log delivery status
+        // Log delivery status and throw error for non-200 status codes
         if (statusCode === 200) {
           console.log(`✅ Notification delivered successfully to ${deviceToken} (${notification.category})`);
+          resolve({ responseBody: data, statusCode });
         } else {
           console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
           console.error(`Response: ${data}`);
+          reject(new Error(`Notification delivery failed with status ${statusCode}: ${data}`));
         }
-        
-        resolve({ responseBody: data, statusCode });
       });
       req.on('error', (err) => {
         client?.close();
         console.error(`Network error sending notification to ${deviceToken}:`, err.message);
-        resolve({ error: err });
+        reject(new Error(`Network error sending notification: ${err.message}`));
       });
       req.end(bodyString);
     });
@@ -81,7 +81,7 @@ export async function sendIOSNotification(deviceToken: string, notification: Not
     client?.close();
     const errorMessage = err instanceof Error ? err.message : String(err);
     console.error(`Exception sending notification to ${deviceToken}:`, errorMessage);
-    return { error: errorMessage };
+    throw new Error(`Exception sending notification: ${errorMessage}`);
   }
 }
 
