@@ -11,13 +11,12 @@ export async function sendDailyVerseNotifications(receiver: NotificationReceiver
         try {
             await sendIOSNotification(receiver.device_token, dailyVerse);
 
-            await supabase().from('ws-notifications').update({
-                last_notification_sent_at: new Date().toISOString()
-            }).eq('device_token', receiver.device_token);
-
-            await supabase().from('ws-notifications-daily-verse').update({
-                last_notification_sent_at: new Date().toISOString()
-            }).eq('device_token', receiver.device_token);
+            await supabase()
+                .from('ws-notifications-daily-verse')
+                .update({
+                    last_notification_sent_at: new Date().toISOString()
+                })
+                .eq('device_token', receiver.device_token);
         } catch (error) {
             console.error(`Error sending daily verse notification to ${receiver.device_token}: ${error instanceof Error ? error.message : String(error)}`);
         }

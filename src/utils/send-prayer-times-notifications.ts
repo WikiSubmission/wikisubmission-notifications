@@ -9,17 +9,16 @@ export async function sendPrayerTimesNotifications(receiver: NotificationReceive
 
     if (prayerTimes) {
         try {
-            await sendIOSNotification(receiver.device_token, prayerTimes, { 
+            await sendIOSNotification(receiver.device_token, prayerTimes, {
                 critical: true
             });
 
-            await supabase().from('ws-notifications').update({
-                last_notification_sent_at: new Date().toISOString()
-            }).eq('device_token', receiver.device_token);
-
-            await supabase().from('ws-notifications-prayer-times').update({
-                last_notification_sent_at: new Date().toISOString()
-            }).eq('device_token', receiver.device_token);
+            await supabase()
+                .from('ws-notifications-prayer-times')
+                .update({
+                    last_notification_sent_at: new Date().toISOString()
+                })
+                .eq('device_token', receiver.device_token);
         } catch (error) {
             console.error(`Error sending prayer times notification to ${receiver.device_token}: ${error instanceof Error ? error.message : String(error)}`);
         }

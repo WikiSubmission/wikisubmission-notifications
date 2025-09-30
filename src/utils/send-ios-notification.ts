@@ -2,10 +2,11 @@ import http2 from 'http2';
 import jwt from 'jsonwebtoken';
 import { NotificationContent } from '../types/notification-content';
 import { NotificationOptions } from '../types/notification-options';
+import { supabase } from './supabase-client';
 
 export async function sendIOSNotification(
-  deviceToken: string, 
-  notification: NotificationContent, 
+  deviceToken: string,
+  notification: NotificationContent,
   options?: NotificationOptions
 ) {
   let client: http2.ClientHttp2Session | undefined;
@@ -50,17 +51,17 @@ export async function sendIOSNotification(
 
     if (notification.category) payload['aps'].category = notification.category;
     if (notification.threadId) payload['aps']['thread-id'] = notification.threadId;
-    
+
     if (notification.deepLink) {
       payload['deepLink'] = notification.deepLink;
       payload['url'] = notification.deepLink;
     }
 
     const bodyString = JSON.stringify(payload);
-    
+
     // Log sending attempt
     console.log(`📤 Sending notification to ${deviceToken}...`);
-    
+
     const req = client.request(headers);
 
     return new Promise((resolve, reject) => {
@@ -72,13 +73,26 @@ export async function sendIOSNotification(
         statusCode = headers[':status'] as number;
       });
       req.on('data', (chunk) => { data += chunk; });
-      req.on('end', () => {
+      req.on('end', async () => {
         client?.close();
-        
+
         // Log delivery status and throw error for non-200 status codes
         if (statusCode === 200) {
           console.log(`✅ Notification delivered successfully to ${deviceToken} (${notification.category})`);
+
+          try {
+            await supabase()
+              .from('ws-notifications')
+              .update({
+                last_notification_sent_at: new Date().toISOString()
+              })
+              .eq('device_token', deviceToken);
+          } catch (error) {
+            console.error(`Error updating last notification sent at for ${deviceToken}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+
           resolve({ responseBody: data, statusCode });
+
         } else {
           console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
           console.error(`Response: ${data}`);
