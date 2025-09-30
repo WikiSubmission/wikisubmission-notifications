@@ -11,7 +11,6 @@ export class Server {
 
     port = parseInt(process.env["PORT"] || "8080");
 
-    // Server-level cache storage
     private routeCache = new Map<string, {
         data: any;
         timestamp: number;
@@ -111,11 +110,6 @@ export class Server {
                                     console.log(`Failed to parse response for caching:`, error);
                                 }
                             }
-    
-                            // Call original onSend if it exists (skip for now to avoid complexity)
-                            // if (originalOnSend) {
-                            //     // Handle original onSend hooks here if needed
-                            // }
     
                             return payload;
                         };

@@ -171,8 +171,6 @@ export class NotificationReceivers {
                     console.error('Heartbeat reconnection failed:', error);
                 }
             }
-            // Skip connection testing - Supabase handles this internally
-            // Only reconnect when we know we're disconnected and no other reconnection is in progress
         }, 300000); // 5 minutes
     }
 

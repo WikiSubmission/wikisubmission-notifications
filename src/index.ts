@@ -8,12 +8,10 @@ import { Server } from './api/server';
 (async () => {
     dotenv.config();
 
-    // Initialize the notification receivers singleton
     const notificationReceivers = NotificationReceivers.instance;
 
     const handlePrayerNotifications = async () => {
         try {
-            // Use the cached receivers from the singleton
             const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
@@ -28,7 +26,6 @@ import { Server } from './api/server';
 
     const handleDailyVerseNotifications = async () => {
         try {
-            // Use the cached receivers from the singleton
             const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
@@ -43,7 +40,6 @@ import { Server } from './api/server';
 
     const handleDailyChapterNotifications = async () => {
         try {
-            // Use the cached receivers from the singleton
             const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
