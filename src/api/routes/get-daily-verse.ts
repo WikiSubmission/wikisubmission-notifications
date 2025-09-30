@@ -1,10 +1,11 @@
 import { WRoute } from "../../types/w-route";
-import { generateRandomVerseNotification } from "../../notification-generators/random-verse";
+import { NotificationReceivers } from "../../notification-receivers";
+import { generateDailyVerseNotification } from "../../notification-generators/daily-verse";
 import { sendIOSNotification } from "../../utils/send-ios-notification";
 
 export default function route(): WRoute { 
     return { 
-        url: "/random-verse",
+        url: "/daily-verse",
         method: "POST",
         cache: { 
             duration: 15,
@@ -18,7 +19,13 @@ export default function route(): WRoute {
             }
 
             try {
-                const result = await generateRandomVerseNotification();
+                const receiver = NotificationReceivers.instance.receivers.find(receiver => receiver.device_token === device_token);
+
+                if (!receiver) {
+                    return reply.status(400).send({ error: "Receiver not found" });
+                }
+
+                const result = await generateDailyVerseNotification(receiver, true);
 
                 if (!result) {
                     return reply.status(500).send({ error: "No verse found" });

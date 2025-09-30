@@ -3,7 +3,7 @@ import type { NotificationReceiver } from "../types/notification-receiver";
 import { WikiSubmission } from "wikisubmission-sdk";
 import { supabase } from "../utils/supabase-client";
 
-export async function generateDailyChapterNotification(receiver: NotificationReceiver): Promise<NotificationContent | null> { 
+export async function generateDailyChapterNotification(receiver: NotificationReceiver, force: boolean = false): Promise<NotificationContent | null> { 
 
     const { data, error } = await supabase().from('ws-notifications-daily-chapter')
         .select('*')
