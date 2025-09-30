@@ -1,8 +1,13 @@
 import http2 from 'http2';
 import jwt from 'jsonwebtoken';
 import { NotificationContent } from '../types/notification-content';
+import { NotificationOptions } from '../types/notification-options';
 
-export async function sendIOSNotification(deviceToken: string, notification: NotificationContent) {
+export async function sendIOSNotification(
+  deviceToken: string, 
+  notification: NotificationContent, 
+  options?: NotificationOptions
+) {
   let client: http2.ClientHttp2Session | undefined;
 
   try {
@@ -24,10 +29,20 @@ export async function sendIOSNotification(deviceToken: string, notification: Not
       'apns-expiration': `${Math.floor(Date.now() / 1000) + notification.expirationHours * 3600}`,
     };
 
+    // Construct sound object for critical alerts or use simple string
+    let soundValue: any = options?.sound || 'default';
+    if (options?.critical) {
+      soundValue = {
+        critical: 1,
+        name: options?.sound || 'default',
+        volume: options?.volume || 1.0
+      };
+    }
+
     const payload: Record<string, any> = {
       aps: {
         alert: { title: notification.title, body: notification.body },
-        sound: 'default',
+        sound: soundValue,
         badge: 1,
       },
       ...notification.metadata,

@@ -9,7 +9,9 @@ export async function sendPrayerTimesNotifications(receiver: NotificationReceive
 
     if (prayerTimes) {
         try {
-            await sendIOSNotification(receiver.device_token, prayerTimes);
+            await sendIOSNotification(receiver.device_token, prayerTimes, { 
+                critical: true
+            });
 
             await supabase().from('ws-notifications').update({
                 last_notification_sent_at: new Date().toISOString()
