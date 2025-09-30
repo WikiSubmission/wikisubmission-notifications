@@ -5,5 +5,5 @@ export interface NotificationContent {
     threadId: 'daily-verse' | 'daily-chapter' | 'prayer' | 'random-verse';
     expirationHours: number;
     deepLink: `wikisubmission://${string}`;
-    custom?: Record<string, any>;
+    metadata?: Record<string, any>;
 }

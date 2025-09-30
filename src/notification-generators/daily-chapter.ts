@@ -38,8 +38,9 @@ export async function generateDailyChapterNotification(receiver: NotificationRec
         threadId: 'daily-chapter',
         deepLink: `wikisubmission://chapter/${verse.response[0]?.chapter_number}`,
         expirationHours: 24,
-        custom: {
+        metadata: {
             chapter_number: verse.response[0]?.chapter_number,
+            verse_id: verse.response[0]?.verse_id,
         },
     };
 }

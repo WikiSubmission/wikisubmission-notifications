@@ -30,7 +30,7 @@ export async function sendIOSNotification(deviceToken: string, notification: Not
         sound: 'default',
         badge: 1,
       },
-      ...notification.custom,
+      ...notification.metadata,
     };
 
     if (notification.category) payload['aps'].category = notification.category;

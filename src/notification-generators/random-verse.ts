@@ -18,7 +18,8 @@ export async function generateRandomVerseNotification(): Promise<NotificationCon
         threadId: 'random-verse',
         deepLink: `wikisubmission://verse/${verse.response[0]?.verse_id}`,
         expirationHours: 5,
-        custom: {
+        metadata: {
+            chapter_number: verse.response[0]?.chapter_number,
             verse_id: verse.response[0]?.verse_id,
         },
     };

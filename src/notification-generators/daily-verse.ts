@@ -38,7 +38,8 @@ export async function generateDailyVerseNotification(receiver: NotificationRecei
         threadId: 'daily-verse',
         deepLink: `wikisubmission://verse/${verse.response[0]?.verse_id}`,
         expirationHours: 24,
-        custom: {
+        metadata: {
+            chapter_number: verse.response[0]?.chapter_number,
             verse_id: verse.response[0]?.verse_id,
         },
     };
