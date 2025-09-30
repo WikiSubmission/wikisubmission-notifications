@@ -52,6 +52,8 @@ export async function generatePrayerTimesNotification(receiver: NotificationRece
         upcoming_prayer_time_left: string;
     };
 
+    if (prayerTimesData.upcoming_prayer === "sunrise") return null;
+
     if (!prayerTimesData || !prayerTimesData.times || !prayerTimesData.current_prayer || !prayerTimesData.upcoming_prayer || !prayerTimesData.current_prayer_time_elapsed || !prayerTimesData.upcoming_prayer_time_left) {
         console.error(`Error getting prayer times for receiver ${receiver.device_token}: ${prayerTimes.statusText}`);
         return null;
