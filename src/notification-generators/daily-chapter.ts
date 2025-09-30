@@ -21,7 +21,7 @@ export async function generateDailyChapterNotification(receiver: NotificationRec
 
     // Check if daily chapter sent in last 24 hours.
     const { last_notification_sent_at } = data;
-    if (last_notification_sent_at && new Date(last_notification_sent_at) > new Date(Date.now() - 1000 * 60 * 60 * 24)) return null;
+    if (last_notification_sent_at && new Date(last_notification_sent_at) > new Date(Date.now() - 1000 * 60 * 60 * 24) && !force) return null;
 
     const ws = WikiSubmission.Quran.V1.createAPIClient();
     const verse = await ws.getRandomChapter();
