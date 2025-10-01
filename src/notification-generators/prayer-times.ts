@@ -1,33 +1,25 @@
-import type { NotificationReceiver } from "../types/notification-receiver";
+import type { Notification } from "../types/notification";
 import type { NotificationContent } from "../types/notification-content";
 import { supabase } from "../utils/supabase-client";
 
-export async function generatePrayerTimesNotification(receiver: NotificationReceiver): Promise<NotificationContent | null> {
+export async function generatePrayerTimesNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> {
 
-    const { data, error } = await supabase().from('ws-notifications-prayer-times')
-        .select('*')
-        .eq('device_token', receiver.device_token)
-        .single();
+    if (!receiver?.prayer_time_notifications?.enabled && !force) return null;
 
-    if (error) {
-        console.error(`Error getting prayer times notifications for receiver ${receiver.device_token}: ${error.message}`);
-    }
-
-    if (!data || data.length === 0) {
-        // Silently return - this is normal
-        return null;
-    }
-
-    const { location, fajr, dhuhr, asr, maghrib, isha, use_midpoint_method_for_asr, last_notification_sent_at } = data;
+    const { location, fajr, dhuhr, asr, maghrib, isha, use_midpoint_method_for_asr } = receiver.prayer_time_notifications?.customization || {};
 
     if (!location) return null;
     if (!fajr && !dhuhr && !asr && !maghrib && !isha) {
-        await supabase().from('ws-notifications').update({
-            prayer_times_notifications: false
-        }).eq('device_token', receiver.device_token);
+        await supabase().from('ws-notifications')
+            .update({
+                prayer_time_notifications: {
+                    enabled: false
+                }
+            })
+            .eq('device_token', receiver.device_token);
         return null;
     }
-    if (last_notification_sent_at && new Date(last_notification_sent_at) > new Date(Date.now() - 1000 * 60 * 24)) return null;
+    if (receiver.prayer_time_notifications?.last_delivery_at && new Date(receiver.prayer_time_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 24) && !force) return null;
 
     const prayerTimes = await fetch(`https://practices.wikisubmission.org/prayer-times/${location}?device_token=${receiver.device_token}&platform=${receiver.platform}${use_midpoint_method_for_asr ? '&asr_adjustment=true' : ''}`);
 
@@ -65,7 +57,7 @@ export async function generatePrayerTimesNotification(receiver: NotificationRece
     if (prayerTimesData.current_prayer === "maghrib" && !maghrib) return null;
     if (prayerTimesData.current_prayer === "isha" && !isha) return null;
 
-    if (prayerTimesData.upcoming_prayer_time_left === "10m" || prayerTimesData.upcoming_prayer_time_left.length === 2) { 
+    if (prayerTimesData.upcoming_prayer_time_left === "10m" || prayerTimesData.upcoming_prayer_time_left.length === 2) {
         return {
             title: `${capitalize(prayerTimesData.upcoming_prayer)} starting soon!`,
             body: `${prayerTimesData.upcoming_prayer_time_left} left (${prayerTimesData.times[prayerTimesData.upcoming_prayer as keyof typeof prayerTimesData.times]})`,

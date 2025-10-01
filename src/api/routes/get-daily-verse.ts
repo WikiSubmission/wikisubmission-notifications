@@ -3,11 +3,11 @@ import { NotificationReceivers } from "../../notification-receivers";
 import { generateDailyVerseNotification } from "../../notification-generators/daily-verse";
 import { sendIOSNotification } from "../../utils/send-ios-notification";
 
-export default function route(): WRoute { 
-    return { 
+export default function route(): WRoute {
+    return {
         url: "/daily-verse",
         method: "POST",
-        cache: { 
+        cache: {
             duration: 15,
             durationType: "seconds",
         },
@@ -27,16 +27,15 @@ export default function route(): WRoute {
 
                 const result = await generateDailyVerseNotification(receiver, true);
 
-                if (!result) {
-                    return reply.status(500).send({ error: "No verse found" });
+                if (result) {
+                    await sendIOSNotification(device_token, result);
+                    return reply.status(200).send({
+                        success: true,
+                        content: result
+                    });
                 }
 
-                await sendIOSNotification(device_token, result);
-
-                return reply.status(200).send({
-                    success: true,
-                    content: result
-                });
+                return reply.status(500).send({ error: "No verse found" });
             } catch (error) {
                 return reply.status(500).send({ error: error instanceof Error ? error.message : String(error) });
             }

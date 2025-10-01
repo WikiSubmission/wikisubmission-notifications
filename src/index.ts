@@ -15,7 +15,7 @@ import { Server } from './api/server';
             const receivers = notificationReceivers.receivers;
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-                if (receiver.prayer_notifications && receiver.device_token) {
+                if (receiver.prayer_time_notifications && receiver.device_token) {
                     await sendPrayerTimesNotifications(receiver);
                 }
             }

@@ -1,9 +1,10 @@
-import type { NotificationReceiver } from "../types/notification-receiver";
+import type { Notification } from "../types/notification";
 import { generatePrayerTimesNotification } from "../notification-generators/prayer-times";
 import { sendIOSNotification } from "./send-ios-notification";
-import { supabase } from "./supabase-client";
 
-export async function sendPrayerTimesNotifications(receiver: NotificationReceiver) {
+export async function sendPrayerTimesNotifications(receiver: Notification) {
+
+    if (!receiver.device_token) return;
 
     const prayerTimes = await generatePrayerTimesNotification(receiver);
 
@@ -12,13 +13,6 @@ export async function sendPrayerTimesNotifications(receiver: NotificationReceive
             await sendIOSNotification(receiver.device_token, prayerTimes, {
                 critical: true
             });
-
-            await supabase()
-                .from('ws-notifications-prayer-times')
-                .update({
-                    last_notification_sent_at: new Date().toISOString()
-                })
-                .eq('device_token', receiver.device_token);
         } catch (error) {
             console.error(`Error sending prayer times notification to ${receiver.device_token}: ${error instanceof Error ? error.message : String(error)}`);
         }

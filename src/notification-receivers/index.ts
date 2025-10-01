@@ -1,12 +1,12 @@
 import { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
-import { NotificationReceiver } from "../types/notification-receiver";
+import { Notification } from "../types/notification";
 import { supabase } from "../utils/supabase-client";
 
 export class NotificationReceivers { 
     static instance = new NotificationReceivers();
 
     // Latest receivers
-    public receivers: NotificationReceiver[] = [];
+    public receivers: Notification[] = [];
 
     // Subscription to the receivers changes
     private subscription: any = null;
@@ -18,7 +18,7 @@ export class NotificationReceivers {
         this.receivers = await this.getReceivers();
     }
 
-    async getReceivers(): Promise<NotificationReceiver[]> {
+    async getReceivers(): Promise<Notification[]> {
         try {
             const { data, error } = await supabase().from('ws-notifications').select('*');
     
@@ -31,9 +31,8 @@ export class NotificationReceivers {
                 console.log('No receivers found');
                 return [];
             }
-    
-            console.log(`Found ${data.length} receivers`);
-            return data as NotificationReceiver[];
+
+            return data as Notification[];
         } catch (error) {
             console.error('Exception while getting receivers:', error);
             return [];
@@ -67,7 +66,6 @@ export class NotificationReceivers {
                         table: 'ws-notifications'
                     },
                     async (payload) => {
-                        console.log('Received database change:', payload.eventType);
                         await this.handleDatabaseChange(payload);
                     }
                 )
@@ -108,17 +106,17 @@ export class NotificationReceivers {
 
             switch (eventType) {
                 case 'INSERT':
-                    console.log('➕ New notification receiver added:', newRecord?.['device_token']);
+                    console.log('➕ New notification receiver added:', newRecord?.['device_token']?.slice(0, 5) + '...');
                     await this.refreshReceivers();
                     break;
 
                 case 'UPDATE':
-                    console.log('🔄 Notification receiver updated:', newRecord?.['device_token']);
+                    console.log('🔄 Notification receiver updated:', newRecord?.['device_token']?.slice(0, 5) + '...');
                     await this.refreshReceivers();
                     break;
 
                 case 'DELETE':
-                    console.log('➖ Receiver deleted:', oldRecord?.['device_token']);
+                    console.log('➖ Receiver deleted:', oldRecord?.['device_token']?.slice(0, 5) + '...');
                     await this.refreshReceivers();
                     break;
 
@@ -134,7 +132,7 @@ export class NotificationReceivers {
         try {
             const newReceivers = await this.getReceivers();
             this.receivers = newReceivers;
-            console.log(`🔄 Receivers updated: ${this.receivers.length} total`);
+            console.log(`🔄 Receivers updated (${this.receivers.length})`);
         } catch (error) {
             console.error('Error refreshing receivers:', error);
         }

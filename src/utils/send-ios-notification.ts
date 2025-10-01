@@ -60,7 +60,7 @@ export async function sendIOSNotification(
     const bodyString = JSON.stringify(payload);
 
     // Log sending attempt
-    console.log(`📤 Sending notification to ${deviceToken}...`);
+    console.log(`📤 Sending notification to ${deviceToken.slice(0, 5) + '...'}`);
 
     const req = client.request(headers);
 
@@ -78,13 +78,28 @@ export async function sendIOSNotification(
 
         // Log delivery status and throw error for non-200 status codes
         if (statusCode === 200) {
-          console.log(`✅ Notification delivered successfully to ${deviceToken} (${notification.category})`);
+          console.log(`✅ Notification delivered successfully to ${deviceToken?.slice(0, 5) + '...'} (${notification.category})`);
 
           try {
             await supabase()
               .from('ws-notifications')
               .update({
-                last_notification_sent_at: new Date().toISOString()
+                last_delivery_at: new Date().toISOString(),
+                ...(notification.category === 'DAILY_VERSE' && {
+                  daily_verse_notifications: {
+                    last_delivery_at: new Date().toISOString()
+                  }
+                }),
+                ...(notification.category === 'DAILY_CHAPTER' && {
+                  daily_chapter_notifications: {
+                    last_delivery_at: new Date().toISOString()
+                  }
+                }),
+                ...(notification.category === 'PRAYER_TIMES' && {
+                  prayer_time_notifications: {
+                    last_delivery_at: new Date().toISOString()
+                  }
+                }),
               })
               .eq('device_token', deviceToken);
           } catch (error) {
