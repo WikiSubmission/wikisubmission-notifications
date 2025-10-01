@@ -19,7 +19,7 @@ export async function generatePrayerTimesNotification(receiver: Notification, fo
             .eq('device_token', receiver.device_token);
         return null;
     }
-    if (receiver.prayer_time_notifications?.last_delivery_at && new Date(receiver.prayer_time_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 24) && !force) return null;
+    if (receiver.prayer_time_notifications?.last_delivery_at && new Date(receiver.prayer_time_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 60) && !force) return null;
 
     const prayerTimes = await fetch(`https://practices.wikisubmission.org/prayer-times/${location}?device_token=${receiver.device_token}&platform=${receiver.platform}${use_midpoint_method_for_asr ? '&asr_adjustment=true' : ''}`);
 
