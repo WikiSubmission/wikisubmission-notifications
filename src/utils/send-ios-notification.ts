@@ -81,26 +81,42 @@ export async function sendIOSNotification(
           console.log(`✅ Notification delivered successfully to ${deviceToken?.slice(0, 5) + '...'} (${notification.category})`);
 
           try {
+            // First get the current record to preserve existing nested data
+            const { data: currentRecord } = await supabase()
+              .from('ws-notifications')
+              .select('daily_verse_notifications, daily_chapter_notifications, prayer_time_notifications')
+              .eq('device_token', deviceToken)
+              .single();
+
+            const updateData: any = {
+              last_delivery_at: new Date().toISOString()
+            };
+
+            // Properly merge nested objects to preserve existing fields
+            if (notification.category === 'DAILY_VERSE' && currentRecord?.daily_verse_notifications) {
+              updateData.daily_verse_notifications = {
+                ...currentRecord.daily_verse_notifications,
+                last_delivery_at: new Date().toISOString()
+              };
+            }
+
+            if (notification.category === 'DAILY_CHAPTER' && currentRecord?.daily_chapter_notifications) {
+              updateData.daily_chapter_notifications = {
+                ...currentRecord.daily_chapter_notifications,
+                last_delivery_at: new Date().toISOString()
+              };
+            }
+
+            if (notification.category === 'PRAYER_TIMES' && currentRecord?.prayer_time_notifications) {
+              updateData.prayer_time_notifications = {
+                ...currentRecord.prayer_time_notifications,
+                last_delivery_at: new Date().toISOString()
+              };
+            }
+
             await supabase()
               .from('ws-notifications')
-              .update({
-                last_delivery_at: new Date().toISOString(),
-                ...(notification.category === 'DAILY_VERSE' && {
-                  daily_verse_notifications: {
-                    last_delivery_at: new Date().toISOString()
-                  }
-                }),
-                ...(notification.category === 'DAILY_CHAPTER' && {
-                  daily_chapter_notifications: {
-                    last_delivery_at: new Date().toISOString()
-                  }
-                }),
-                ...(notification.category === 'PRAYER_TIMES' && {
-                  prayer_time_notifications: {
-                    last_delivery_at: new Date().toISOString()
-                  }
-                }),
-              })
+              .update(updateData)
               .eq('device_token', deviceToken);
           } catch (error) {
             console.error(`Error updating last notification sent at for ${deviceToken}: ${error instanceof Error ? error.message : String(error)}`);
@@ -108,11 +124,24 @@ export async function sendIOSNotification(
 
           resolve({ responseBody: data, statusCode });
 
-        } else {
-          console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
-          console.error(`Response: ${data}`);
-          reject(new Error(`Notification delivery failed with status ${statusCode}: ${data}`));
-        }
+          } else {
+            console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
+            console.error(`Response: ${data}`);
+            
+            // Parse response to check for BadDeviceToken
+            try {
+              const responseData = JSON.parse(data);
+                if (responseData?.reason === 'BadDeviceToken') {
+                  // If so, delete the device token from the database.
+                  await supabase()
+                    .from('ws-notifications')
+                    .delete()
+                    .eq('device_token', deviceToken);
+                }
+            } catch (parseError) {}
+            
+            reject(new Error(`Notification delivery failed with status ${statusCode}: ${data}`));
+          }
       });
       req.on('error', (err) => {
         client?.close();
