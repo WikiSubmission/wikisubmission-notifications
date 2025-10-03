@@ -1,5 +1,5 @@
 import type { Notification } from "../types/notification";
-import { generatePrayerTimesNotification } from "../notification-generators/prayer-times";
+import { generatePrayerTimesNotification } from "../notification-generators/generate-prayer-times";
 import { sendIOSNotification } from "./send-ios-notification";
 
 export async function sendPrayerTimesNotifications(receiver: Notification) {

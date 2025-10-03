@@ -1,5 +1,5 @@
 import { WRoute } from "../../types/w-route";
-import { generateRandomVerseNotification } from "../../notification-generators/random-verse";
+import { generateRandomVerseNotification } from "../../notification-generators/generate-random-verse";
 import { sendIOSNotification } from "../../utils/send-ios-notification";
 
 export default function route(): WRoute {
