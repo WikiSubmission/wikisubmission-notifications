@@ -12,7 +12,7 @@ import { Server } from './api/server';
 
     const handlePrayerNotifications = async () => {
         try {
-            const receivers = notificationReceivers.receivers;
+            const receivers = await notificationReceivers.getReceivers();
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.prayer_time_notifications && receiver.device_token) {
@@ -26,7 +26,7 @@ import { Server } from './api/server';
 
     const handleDailyVerseNotifications = async () => {
         try {
-            const receivers = notificationReceivers.receivers;
+            const receivers = await notificationReceivers.getReceivers();
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.daily_verse_notifications && receiver.device_token) {
@@ -40,7 +40,7 @@ import { Server } from './api/server';
 
     const handleDailyChapterNotifications = async () => {
         try {
-            const receivers = notificationReceivers.receivers;
+            const receivers = await notificationReceivers.getReceivers();
 
             for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
                 if (receiver.daily_chapter_notifications && receiver.device_token) {
@@ -56,7 +56,7 @@ import { Server } from './api/server';
         console.log('Initializing notification receivers...');
         await notificationReceivers.initialize();
         await notificationReceivers.subscribeToChanges();
-        
+
         setInterval(() => {
             handlePrayerNotifications().catch(err => 
                 console.error('Unhandled error in prayer notifications interval:', err)
