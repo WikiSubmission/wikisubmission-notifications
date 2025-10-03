@@ -17,7 +17,7 @@ export async function generateDailyChapterNotification(receiver: Notification, f
         return null;
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
         return null;
     }
 

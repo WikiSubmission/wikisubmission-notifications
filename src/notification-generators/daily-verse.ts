@@ -17,7 +17,7 @@ export async function generateDailyVerseNotification(receiver: Notification, for
         return null;
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
         return null;
     }
 
