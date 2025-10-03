@@ -15,5 +15,4 @@ export async function sendDailyVerseNotifications(receiver: Notification) {
             console.error(`Error sending daily verse notification to ${receiver.device_token}: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-
 }
