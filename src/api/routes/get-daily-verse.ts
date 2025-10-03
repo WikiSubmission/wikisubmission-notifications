@@ -1,6 +1,6 @@
 import { WRoute } from "../../types/w-route";
 import { NotificationReceivers } from "../../notification-receivers";
-import { generateDailyVerseNotification } from "../../notification-generators/daily-verse";
+import { generateDailyVerseNotification } from "../../notification-generators/generate-daily-verse";
 import { sendIOSNotification } from "../../utils/send-ios-notification";
 
 export default function route(): WRoute {

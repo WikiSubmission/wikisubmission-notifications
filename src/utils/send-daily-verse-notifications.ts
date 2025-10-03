@@ -1,5 +1,5 @@
 import type { Notification } from "../types/notification";
-import { generateDailyVerseNotification } from "../notification-generators/daily-verse";
+import { generateDailyVerseNotification } from "../notification-generators/generate-daily-verse";
 import { sendIOSNotification } from "./send-ios-notification";
 
 export async function sendDailyVerseNotifications(receiver: Notification) {

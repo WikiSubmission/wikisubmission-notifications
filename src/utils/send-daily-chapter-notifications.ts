@@ -1,5 +1,5 @@
 import type { Notification } from "../types/notification";
-import { generateDailyChapterNotification } from "../notification-generators/daily-chapter";
+import { generateDailyChapterNotification } from "../notification-generators/generate-daily-chapter";
 import { sendIOSNotification } from "./send-ios-notification";
 
 export async function sendDailyChapterNotifications(receiver: Notification) {
