@@ -19,7 +19,8 @@ export default function route(): WRoute {
             }
 
             try {
-                const receiver = NotificationReceivers.instance.receivers.find(receiver => receiver.device_token === device_token);
+                const receivers = await NotificationReceivers.instance.getReceivers();
+                const receiver = receivers.find(receiver => receiver.device_token === device_token);
 
                 if (!receiver) {
                     return reply.status(400).send({ error: "Receiver not found" });
