@@ -2,6 +2,7 @@ import type { NotificationContent } from "../types/notification-content";
 import type { Notification } from "../types/notification";
 import { WikiSubmission } from "wikisubmission-sdk";
 import { supabase } from "../utils/supabase-client";
+import { shouldBlockNotification } from "../utils/notification-timing";
 
 export async function generateDailyVerseNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> {
 
@@ -21,12 +22,13 @@ export async function generateDailyVerseNotification(receiver: Notification, for
         return null;
     }
 
-    // Check if daily verse sent in last 24 hours.
-    const { daily_verse_notifications } = data;
-    if (daily_verse_notifications?.last_delivery_at && new Date(daily_verse_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 60 * 24) && !force) return null;
+    // Check if daily verse sent in last 24 hours (category-specific timing)
+    if (shouldBlockNotification(data, 'daily_verse', force)) {
+        return null;
+    }
 
     const ws = WikiSubmission.Quran.V1.createAPIClient();
-    const verse = await ws.getVerseOfTheDay();
+    const verse = await ws.getRandomVerse();
 
     if (verse instanceof Error) {
         console.error(verse.message);

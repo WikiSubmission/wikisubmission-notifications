@@ -19,4 +19,5 @@ export interface Notification {
     }>;
     daily_verse_notifications?: NotificationPreferences;
     daily_chapter_notifications?: NotificationPreferences;
+    ignore?: boolean;
 }

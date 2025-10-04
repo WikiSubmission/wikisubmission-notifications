@@ -2,6 +2,7 @@ import type { NotificationContent } from "../types/notification-content";
 import type { Notification } from "../types/notification";
 import { WikiSubmission } from "wikisubmission-sdk";
 import { supabase } from "../utils/supabase-client";
+import { shouldBlockNotification } from "../utils/notification-timing";
 
 export async function generateDailyChapterNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> { 
 
@@ -21,9 +22,10 @@ export async function generateDailyChapterNotification(receiver: Notification, f
         return null;
     }
 
-    // Check if daily chapter sent in last 24 hours.
-    const { daily_chapter_notifications } = data;
-    if (daily_chapter_notifications?.last_delivery_at && new Date(daily_chapter_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 60 * 24) && !force) return null;
+    // Check if daily chapter sent in last 24 hours (category-specific timing)
+    if (shouldBlockNotification(data, 'daily_chapter', force)) {
+        return null;
+    }
 
     const ws = WikiSubmission.Quran.V1.createAPIClient();
     const verse = await ws.getRandomChapter();

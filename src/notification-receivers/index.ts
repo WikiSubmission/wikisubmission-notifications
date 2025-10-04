@@ -32,7 +32,7 @@ export class NotificationReceivers {
                 return [];
             }
 
-            return data as Notification[];
+            return (data as Notification[]).filter(receiver => receiver.ignore === false);
         } catch (error) {
             console.error('Exception while getting receivers:', error);
             return [];

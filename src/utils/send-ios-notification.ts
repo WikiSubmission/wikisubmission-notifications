@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { NotificationContent } from '../types/notification-content';
 import { NotificationOptions } from '../types/notification-options';
 import { supabase } from './supabase-client';
+import { createUpdateData } from './notification-timing';
+import { NotificationCategory } from '../types/notification-categories';
 
 export async function sendIOSNotification(
   deviceToken: string,
@@ -81,64 +83,63 @@ export async function sendIOSNotification(
           console.log(`✅ Notification delivered successfully to ${deviceToken?.slice(0, 5) + '...'} (${notification.category})`);
 
           try {
-            // First get the current record to preserve existing nested data
-            const { data: currentRecord } = await supabase()
-              .from('ws-notifications')
-              .select('daily_verse_notifications, daily_chapter_notifications, prayer_time_notifications')
-              .eq('device_token', deviceToken)
-              .single();
-
-            const updateData: any = {
-              last_delivery_at: new Date().toISOString()
-            };
-
-            // Properly merge nested objects to preserve existing fields
-            if (notification.category === 'DAILY_VERSE' && currentRecord?.daily_verse_notifications) {
-              updateData.daily_verse_notifications = {
-                ...currentRecord.daily_verse_notifications,
-                last_delivery_at: new Date().toISOString()
-              };
+            const now = new Date().toISOString();
+            
+            // Determine category and create appropriate update data
+            let category: NotificationCategory;
+            if (notification.category === 'DAILY_VERSE') {
+              category = 'daily_verse';
+            } else if (notification.category === 'DAILY_CHAPTER') {
+              category = 'daily_chapter';
+            } else if (notification.category === 'PRAYER_TIMES') {
+              category = 'prayer_times';
+            } else {
+              // Fallback for unknown categories - just update root-level
+              await supabase()
+                .from('ws-notifications')
+                .upsert({
+                  device_token: deviceToken,
+                  last_delivery_at: now
+                }, {
+                  onConflict: 'device_token',
+                  ignoreDuplicates: false
+                });
+              return;
             }
 
-            if (notification.category === 'DAILY_CHAPTER' && currentRecord?.daily_chapter_notifications) {
-              updateData.daily_chapter_notifications = {
-                ...currentRecord.daily_chapter_notifications,
-                last_delivery_at: new Date().toISOString()
-              };
-            }
-
-            if (notification.category === 'PRAYER_TIMES' && currentRecord?.prayer_time_notifications) {
-              updateData.prayer_time_notifications = {
-                ...currentRecord.prayer_time_notifications,
-                last_delivery_at: new Date().toISOString()
-              };
-            }
+            const updateData = createUpdateData(category, now);
 
             await supabase()
               .from('ws-notifications')
-              .update(updateData)
-              .eq('device_token', deviceToken);
+              .upsert({
+                device_token: deviceToken,
+                ...updateData
+              }, {
+                onConflict: 'device_token',
+                ignoreDuplicates: false
+              });
           } catch (error) {
             console.error(`Error updating last notification sent at for ${deviceToken}: ${error instanceof Error ? error.message : String(error)}`);
           }
 
           resolve({ responseBody: data, statusCode });
-
-          } else {
+        } else {
             console.error(`Notification delivery failed to ${deviceToken} (${statusCode})`);
             console.error(`Response: ${data}`);
             
             // Parse response to check for BadDeviceToken
             try {
               const responseData = JSON.parse(data);
-                if (responseData?.reason === 'BadDeviceToken') {
-                  // If so, delete the device token from the database.
-                  await supabase()
-                    .from('ws-notifications')
-                    .delete()
-                    .eq('device_token', deviceToken);
-                }
-            } catch (parseError) {}
+              if (responseData?.reason === 'BadDeviceToken') {
+                // If so, delete the device token from the database.
+                await supabase()
+                  .from('ws-notifications')
+                  .delete()
+                  .eq('device_token', deviceToken);
+              }
+            } catch (parseError) {
+              console.error(`Error parsing APNs response: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+            }
             
             reject(new Error(`Notification delivery failed with status ${statusCode}: ${data}`));
           }

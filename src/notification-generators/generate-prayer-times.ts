@@ -1,6 +1,7 @@
 import type { Notification } from "../types/notification";
 import type { NotificationContent } from "../types/notification-content";
 import { supabase } from "../utils/supabase-client";
+import { shouldBlockNotification } from "../utils/notification-timing";
 
 export async function generatePrayerTimesNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> {
 
@@ -34,7 +35,10 @@ export async function generatePrayerTimesNotification(receiver: Notification, fo
             .eq('device_token', receiver.device_token);
         return null;
     }
-    if (prayer_time_notifications?.last_delivery_at && new Date(prayer_time_notifications?.last_delivery_at) > new Date(Date.now() - 1000 * 60 * 60) && !force) return null;
+    // Check if prayer time notification sent in last 1 hour (category-specific timing)
+    if (shouldBlockNotification(data, 'prayer_times', force)) {
+        return null;
+    }
 
     const prayerTimes = await fetch(`https://practices.wikisubmission.org/prayer-times/${location}?device_token=${receiver.device_token}&platform=${receiver.platform}${use_midpoint_method_for_asr ? '&asr_adjustment=true' : ''}`);
 
