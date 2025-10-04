@@ -63,17 +63,17 @@ import { Server } from './api/server';
             );
         }, 60000); // 1 minute
         
-        setInterval(() => {
-            handleDailyVerseNotifications().catch(err => 
-                console.error('Unhandled error in daily verse notifications interval:', err)
-            );
-        }, 1000 * 60 * 60 * 1); // 1 hours
+        // setInterval(() => {
+        //     handleDailyVerseNotifications().catch(err => 
+        //         console.error('Unhandled error in daily verse notifications interval:', err)
+        //     );
+        // }, 1000 * 60 * 60 * 1); // 1 hours
         
-        setInterval(() => {
-            handleDailyChapterNotifications().catch(err => 
-                console.error('Unhandled error in daily chapter notifications interval:', err)
-            );
-        }, 1000 * 60 * 60 * 3); // 3 hours
+        // setInterval(() => {
+        //     handleDailyChapterNotifications().catch(err => 
+        //         console.error('Unhandled error in daily chapter notifications interval:', err)
+        //     );
+        // }, 1000 * 60 * 60 * 3); // 3 hours
         
         console.log('✅ Notifications Service is running');
 
