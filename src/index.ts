@@ -57,10 +57,6 @@ import { Server } from './api/server';
         await notificationReceivers.initialize();
         await notificationReceivers.subscribeToChanges();
 
-        await handlePrayerNotifications()
-        await handleDailyVerseNotifications()
-        await handleDailyChapterNotifications()
-
         setInterval(() => {
             handlePrayerNotifications().catch(err => 
                 console.error('Unhandled error in prayer notifications interval:', err)
