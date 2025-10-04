@@ -24,33 +24,33 @@ import { Server } from './api/server';
         }
     };
 
-    const handleDailyVerseNotifications = async () => {
-        try {
-            const receivers = await notificationReceivers.getReceivers();
+    // const handleDailyVerseNotifications = async () => {
+    //     try {
+    //         const receivers = await notificationReceivers.getReceivers();
 
-            for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-                if (receiver.daily_verse_notifications && receiver.device_token) {
-                    await sendDailyVerseNotifications(receiver);
-                }
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    //         for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
+    //             if (receiver.daily_verse_notifications && receiver.device_token) {
+    //                 await sendDailyVerseNotifications(receiver);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // };
 
-    const handleDailyChapterNotifications = async () => {
-        try {
-            const receivers = await notificationReceivers.getReceivers();
+    // const handleDailyChapterNotifications = async () => {
+    //     try {
+    //         const receivers = await notificationReceivers.getReceivers();
 
-            for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
-                if (receiver.daily_chapter_notifications && receiver.device_token) {
-                    await sendDailyChapterNotifications(receiver);
-                }
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    //         for (const receiver of receivers.filter(receiver => receiver.platform === 'ios')) {
+    //             if (receiver.daily_chapter_notifications && receiver.device_token) {
+    //                 await sendDailyChapterNotifications(receiver);
+    //             }
+    //         }
+    //     } catch (error) {
+    //         console.error(error);
+    //     }
+    // };
 
     try {
         console.log('Initializing notification receivers...');
