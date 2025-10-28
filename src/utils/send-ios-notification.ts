@@ -189,12 +189,14 @@ export async function sendIOSNotification(
               console.error(`Fallback attempt failed: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);
             }
             
-            // Parse response to check for BadDeviceToken
+            // Parse response to check for invalid device tokens
             try {
               const responseData = JSON.parse(data);
-              if (responseData?.reason === 'BadDeviceToken') {
-                console.log(`🗑️ Deleting device token ${deviceToken?.slice(0, 5) + '...'} after both environments failed`);
-                // If so, delete the device token from the database.
+              const invalidTokenReasons = ['BadDeviceToken', 'Unregistered', 'DeviceTokenNotForTopic'];
+              
+              if (invalidTokenReasons.includes(responseData?.reason)) {
+                console.log(`🗑️ Deleting device token ${deviceToken?.slice(0, 5) + '...'} (reason: ${responseData.reason})`);
+                // Delete the invalid device token from the database
                 await supabase()
                   .from('ws-notifications')
                   .delete()
