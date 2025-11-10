@@ -1,8 +1,8 @@
 import type { NotificationContent } from "../types/notification-content";
 import type { Notification } from "../types/notification";
-import { WikiSubmission } from "wikisubmission-sdk";
 import { supabase } from "../utils/supabase-client";
 import { shouldBlockNotification } from "../utils/notification-timing";
+import { ws } from "../utils/wikisubmission-sdk";
 
 export async function generateDailyVerseNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> {
 
@@ -27,24 +27,23 @@ export async function generateDailyVerseNotification(receiver: Notification, for
         return null;
     }
 
-    const ws = WikiSubmission.Quran.V1.createAPIClient();
-    const verse = await ws.getRandomVerse();
+    const verse = await ws.Quran.randomVerse();
 
-    if (verse instanceof Error) {
-        console.error(verse.message);
+    if (verse.error) {
+        console.error(verse.error.message);
         return null;
     }
 
     return {
         title: `Daily Verse`,
-        body: `[${verse.response[0]?.verse_id}] ${verse.response[0]?.verse_text_english}`,
+        body: `[${verse.data.verse_id}] ${verse.data.ws_quran_text.english}`,
         category: 'DAILY_VERSE',
         threadId: 'daily-verse',
-        deepLink: `wikisubmission://verse/${verse.response[0]?.verse_id}`,
+        deepLink: `wikisubmission://verse/${verse.data.verse_id}`,
         expirationHours: 24,
         metadata: {
-            chapter_number: verse.response[0]?.chapter_number,
-            verse_id: verse.response[0]?.verse_id,
+            chapter_number: verse.data.chapter_number,
+            verse_id: verse.data.verse_id,
         },
     };
 }

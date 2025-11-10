@@ -33,6 +33,6 @@
     "jsonwebtoken": "^9.0.2",
     "node-cache": "^5.1.2",
     "pino-pretty": "^13.1.1",
-    "wikisubmission-sdk": "^1.0.9"
+    "wikisubmission-sdk": "^2.0.2"
   }
 }

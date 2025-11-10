@@ -1,10 +1,10 @@
 import type { NotificationContent } from "../types/notification-content";
 import type { Notification } from "../types/notification";
-import { WikiSubmission } from "wikisubmission-sdk";
 import { supabase } from "../utils/supabase-client";
 import { shouldBlockNotification } from "../utils/notification-timing";
+import { ws } from "../utils/wikisubmission-sdk";
 
-export async function generateDailyChapterNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> { 
+export async function generateDailyChapterNotification(receiver: Notification, force: boolean = false): Promise<NotificationContent | null> {
 
     if (!receiver.daily_chapter_notifications?.enabled && !force) return null;
 
@@ -27,24 +27,23 @@ export async function generateDailyChapterNotification(receiver: Notification, f
         return null;
     }
 
-    const ws = WikiSubmission.Quran.V1.createAPIClient();
-    const verse = await ws.getRandomChapter();
+    const chapter = await ws.Quran.randomChapter();
 
-    if (verse instanceof Error) {
-        console.error(verse.message);
+    if (chapter.error) {
+        console.error(chapter.error.message);
         return null;
     }
 
     return {
         title: `Daily Chapter`,
-        body: `Sura ${verse.response[0]?.chapter_number}, ${verse.response[0]?.chapter_title_english}. Click to read now.`,
+        body: `Sura ${chapter.data.chapter_number}, ${chapter.data.ws_quran_chapters.title_english}. Click to read now.`,
         category: 'DAILY_CHAPTER',
         threadId: 'daily-chapter',
-        deepLink: `wikisubmission://chapter/${verse.response[0]?.chapter_number}`,
+        deepLink: `wikisubmission://chapter/${chapter.data.chapter_number}`,
         expirationHours: 24,
         metadata: {
-            chapter_number: verse.response[0]?.chapter_number,
-            verse_id: verse.response[0]?.verse_id,
+            chapter_number: chapter.data.chapter_number,
+            verse_id: chapter.data.verse_id,
         },
     };
 }
